@@ -91,13 +91,13 @@ int main(int argc, char * const argv[]) {
         return 1;
     }
     vector< vector<unsigned char> >* querySequences = new vector< vector<unsigned char> >();
-    printf("Reading query fasta file...\n");
-    readFastaSequences(queryFile, alphabet, alphabetLength, querySequences);
-    unsigned char* query = (*querySequences)[0].data();
-    int queryLength = (*querySequences)[0].size();
-    printf("Read query sequence, %d residues.\n", queryLength);
-    fclose(queryFile);
-
+    printf("Reading (multiple) query fasta file...\n");
+    bool wholeQueryRead = readFastaSequences(queryFile, alphabet, alphabetLength, querySequences);
+    if (wholeQueryRead) {
+        printf("Whole query file (%d sequence(s)) read!\n", (int)querySequences->size());
+    } else {
+        printf("Chunk of query file (%d sequence(s)) read!\n", (int)querySequences->size());
+    }
 
     // Build db
     char* dbFilepath = argv[optind+1];
@@ -132,6 +132,11 @@ int main(int argc, char * const argv[]) {
         printf("Read %d database sequences, %d residues total.\n", dbLength, dbNumResidues);
 
         // ----------------------------- MAIN CALCULATION ----------------------------- //
+        for (unsigned int j = 0; j < querySequences->size(); j++) {
+        unsigned char* query = (*querySequences)[j].data();
+        int queryLength = (*querySequences)[j].size();
+        printf("Search query sequence, %d residues.\n", queryLength);
+        
         int* scores = new int[dbLength];    
         printf("\nComparing query to database...");
         fflush(stdout);
@@ -150,14 +155,16 @@ int main(int argc, char * const argv[]) {
                 printf("#%d: %d\n", wholeDbLength + i, scores[i]);
         }
 
+        delete[] scores;
+        }
         wholeDbLength += dbLength;
         
         delete[] db;
         delete[] dbSeqLengths;
-        delete[] scores;
         delete dbSequences;
     }
 
+    printf("\nSearch of all query sequences against database completed!\n");
     printf("\nCpu time of searching: %lf\n", cpuTime);
     printf("Read %d database sequences in total.\n", wholeDbLength);
 
@@ -182,6 +189,7 @@ int main(int argc, char * const argv[]) {
         printf("\tAverage score: %lf\n", averageScore);
         }*/
 
+    fclose(queryFile);
     fclose(dbFile);
     // Free allocated space
     delete querySequences;
