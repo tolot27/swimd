@@ -13,6 +13,7 @@
 *.a
 
 test
+test_data
 swimd_aligner
 swimd.layout
 swimd.depend

@@ -24,7 +24,8 @@ class ScoreMatrix {
     unsigned char* getAlphabet();
     int* getMatrix();
     
-    static ScoreMatrix getBlosum50();  
+    static ScoreMatrix getBlosum50();
+    static ScoreMatrix getBlosum62();
 
  private:
     static vector<unsigned char> getBlosumAlphabet();
