@@ -12,7 +12,7 @@
 
 using namespace std;
 
-bool readFastaSequences(FILE* &file, char* alphabet, int alphabetLength, vector< vector<unsigned char> >* seqs);
+bool readFastaSequences(FILE* &file, unsigned char* alphabet, int alphabetLength, vector< vector<unsigned char> >* seqs);
 
 int main(int argc, char * const argv[]) {
     int gapOpen = 3;
@@ -59,7 +59,7 @@ int main(int argc, char * const argv[]) {
         }
     }
 
-    char* alphabet = scoreMatrix.getAlphabet();
+    unsigned char* alphabet = scoreMatrix.getAlphabet();
     int alphabetLength = scoreMatrix.getAlphabetLength();
 
 
@@ -79,7 +79,6 @@ int main(int argc, char * const argv[]) {
     }
     printf("Using %s alignment mode.\n", mode);
 
-    int readResult;
     // Build query
     char* queryFilepath = argv[optind];
     FILE* queryFile = fopen(queryFilepath, "r");
@@ -121,7 +120,7 @@ int main(int argc, char * const argv[]) {
         unsigned char** db = new unsigned char*[dbLength];
         int* dbSeqLengths = new int[dbLength];
         int dbNumResidues = 0;
-        for (int i = 0; i < dbSequences->size(); i++) {
+        for (unsigned int i = 0; i < dbSequences->size(); i++) {
             db[i] = (*dbSequences)[i].data();
             dbSeqLengths[i] = (*dbSequences)[i].size();
             dbNumResidues += dbSeqLengths[i];
@@ -136,6 +135,9 @@ int main(int argc, char * const argv[]) {
         int resultCode = swimdSearchDatabase(query, queryLength, db, dbLength, dbSeqLengths,
                                              gapOpen, gapExt, scoreMatrix.getMatrix(), alphabetLength,
                                              scores, modeCode);
+        if (resultCode) {
+            printf("\nDatabase search failed with error code: %d\n", resultCode);
+        }
         clock_t finish = clock();
         cpuTime += ((double)(finish-start))/CLOCKS_PER_SEC;
         // ---------------------------------------------------------------------------- //
@@ -196,7 +198,7 @@ int main(int argc, char * const argv[]) {
  * @param [out] seqs Sequences will be stored here, each sequence as vector of indexes from alphabet.
  * @return true if reached end of file, otherwise false.
  */
-bool readFastaSequences(FILE* &file, char* alphabet, int alphabetLength, vector< vector<unsigned char> >* seqs) {
+bool readFastaSequences(FILE* &file, unsigned char* alphabet, int alphabetLength, vector< vector<unsigned char> >* seqs) {
     seqs->clear();
 
     unsigned char letterIdx[128]; //!< letterIdx[c] is index of letter c in alphabet
@@ -213,11 +215,11 @@ bool readFastaSequences(FILE* &file, char* alphabet, int alphabetLength, vector<
     bool inHeader = false;
     bool inSequence = false;
     int buffSize = 4096;
-    char buffer[buffSize];
+    unsigned char buffer[buffSize];
     while (!feof(file)) {
         int read = fread(buffer, sizeof(char), buffSize, file);
         for (int i = 0; i < read; ++i) {
-            char c = buffer[i];
+            unsigned char c = buffer[i];
             if (inHeader) { // I do nothing if in header
                 if (c == '\n')
                     inHeader = false;
